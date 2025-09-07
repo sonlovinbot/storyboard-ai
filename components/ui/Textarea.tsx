@@ -5,7 +5,7 @@ interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement
   label: string;
 }
 
-const Textarea: React.FC<TextareaProps> = ({ label, id, ...props }) => {
+const Textarea: React.FC<TextareaProps> = ({ label, id, className = '', ...props }) => {
   return (
     <div>
       <label htmlFor={id} className="block text-sm font-medium leading-6 text-brand-text-light">
@@ -14,7 +14,7 @@ const Textarea: React.FC<TextareaProps> = ({ label, id, ...props }) => {
       <div className="mt-2">
         <textarea
           id={id}
-          className="block w-full rounded-md border-0 bg-white/5 py-1.5 px-3 text-brand-text-light shadow-sm ring-1 ring-inset ring-brand-border focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6"
+          className={`block w-full rounded-md border-0 bg-white/5 py-1.5 px-3 text-brand-text-light shadow-sm ring-1 ring-inset ring-brand-border focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6 ${className}`}
           {...props}
         />
       </div>

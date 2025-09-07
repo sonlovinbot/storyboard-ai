@@ -1,12 +1,14 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { Project, Character } from '../types';
+import { Project, Character, SceneSetting } from '../types';
 import * as geminiService from '../services/geminiService';
 import Button from './ui/Button';
 import Spinner from './ui/Spinner';
 import Textarea from './ui/Textarea';
 import ImageUploader from './ui/ImageUploader';
 import Input from './ui/Input';
+import Card from './ui/Card';
+import Modal from './ui/Modal';
 
 interface Props {
   project: Project;
@@ -14,14 +16,13 @@ interface Props {
   goToNextStep: () => void;
 }
 
-// FIX: Define a specific type for editable character fields to fix the type error.
 type EditableCharacterField = keyof Omit<Character, 'id' | 'imageUrl' | 'isGenerating' | 'referenceImage'>;
 
 const CharacterEditor: React.FC<{
     character: Character;
     isEditing: boolean;
     onUpdateField: (field: EditableCharacterField, value: string) => void;
-    onUploadReference: (base64: string, mimeType: string) => void;
+    onUploadReference: (base64: string) => void;
 }> = ({ character, isEditing, onUpdateField, onUploadReference }) => {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         onUpdateField(e.target.name as EditableCharacterField, e.target.value);
@@ -43,7 +44,7 @@ const CharacterEditor: React.FC<{
         return (
             <div className="space-y-3">
                 {fields.map(f => (
-                    f.key === 'description' || f.type === 'textarea' ? (
+                    f.type === 'textarea' ? (
                         <Textarea key={f.key} label={f.label} name={f.key} value={character[f.key] as string} onChange={handleChange} rows={2} />
                     ) : (
                         <Input key={f.key} label={f.label} name={f.key} value={character[f.key] as string} onChange={handleChange} />
@@ -80,6 +81,8 @@ const CharacterCard: React.FC<{
   onUpdate: (updatedCharacter: Character) => void;
   onRegenerate: (id: string) => void;
   onDelete: (id: string) => void;
+  artStyle: string;
+  aspectRatio: string;
 }> = ({ character, onUpdate, onRegenerate, onDelete }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [editedCharacter, setEditedCharacter] = useState<Character>(character);
@@ -150,6 +153,10 @@ const CharacterCard: React.FC<{
 const Step4_Characters: React.FC<Props> = ({ project, setProject, goToNextStep }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  const [isSceneEditModalOpen, setIsSceneEditModalOpen] = useState(false);
+  const [editingScene, setEditingScene] = useState<SceneSetting | null>(null);
+  const [editedSceneDescription, setEditedSceneDescription] = useState('');
 
   const handleExtractCharacters = useCallback(async () => {
     if (project.characters.length > 0) return;
@@ -161,13 +168,6 @@ const Step4_Characters: React.FC<Props> = ({ project, setProject, goToNextStep }
         ...c,
         id: `char-${Date.now()}-${i}`,
         isGenerating: false,
-        age: '',
-        personality: '',
-        appearance: '',
-        hair: '',
-        skin: '',
-        outfit: '',
-        accessories: '',
       }));
       setProject(p => ({ ...p, characters: newCharacters }));
     } catch (e) {
@@ -178,9 +178,26 @@ const Step4_Characters: React.FC<Props> = ({ project, setProject, goToNextStep }
     }
   }, [project.screenplay, project.maxCharacters, setProject, project.characters.length]);
 
-  React.useEffect(() => {
+  const handleExtractSceneLocations = useCallback(async () => {
+    if (project.sceneSettings.length > 0) return;
+    try {
+        const { locations } = await geminiService.extractSceneLocations(project.screenplay);
+        const newSceneSettings: SceneSetting[] = locations.map((desc, i) => ({
+            id: `scene-${Date.now()}-${i}`,
+            description: desc,
+            isGenerating: false,
+        }));
+        setProject(p => ({ ...p, sceneSettings: newSceneSettings }));
+    } catch (e) {
+        console.error(e);
+        setError(prev => `${prev ? prev + "\n" : ""}Failed to extract scene locations.`);
+    }
+  }, [project.screenplay, project.sceneSettings.length, setProject]);
+
+  useEffect(() => {
     handleExtractCharacters();
-  }, [handleExtractCharacters]);
+    handleExtractSceneLocations();
+  }, [handleExtractCharacters, handleExtractSceneLocations]);
   
   const handleUpdateCharacter = (updatedCharacter: Character) => {
     setProject(p => ({
@@ -189,7 +206,7 @@ const Step4_Characters: React.FC<Props> = ({ project, setProject, goToNextStep }
     }));
   };
 
-  const handleGenerateImage = useCallback(async (id: string) => {
+  const handleGenerateCharImage = useCallback(async (id: string) => {
     const character = project.characters.find(c => c.id === id);
     if (!character) return;
 
@@ -201,14 +218,29 @@ const Step4_Characters: React.FC<Props> = ({ project, setProject, goToNextStep }
         const mimeType = meta.match(/:(.*?);/)?.[1];
         if(data && mimeType) refImage = { data, mimeType };
       }
-      const base64Image = await geminiService.generateCharacterImage(character, project.artStyle, refImage);
+      const base64Image = await geminiService.generateCharacterImage(character, project.artStyle, project.aspectRatio, refImage);
       setProject(p => ({ ...p, characters: p.characters.map(c => c.id === id ? { ...c, imageUrl: `data:image/png;base64,${base64Image}`, isGenerating: false } : c)}));
     } catch (e) {
       console.error(e);
       setError(`Failed to generate image for ${character.name}.`);
       setProject(p => ({ ...p, characters: p.characters.map(c => c.id === id ? { ...c, isGenerating: false } : c)}));
     }
-  }, [project.characters, project.artStyle, setProject]);
+  }, [project.characters, project.artStyle, project.aspectRatio, setProject]);
+
+  const handleGenerateSceneImage = useCallback(async (id: string) => {
+    const scene = project.sceneSettings.find(s => s.id === id);
+    if (!scene) return;
+
+    setProject(p => ({ ...p, sceneSettings: p.sceneSettings.map(s => s.id === id ? { ...s, isGenerating: true } : s)}));
+    try {
+      const base64Image = await geminiService.generateSceneSettingImage(scene.description, project.artStyle, project.aspectRatio);
+      setProject(p => ({ ...p, sceneSettings: p.sceneSettings.map(s => s.id === id ? { ...s, imageUrl: `data:image/png;base64,${base64Image}`, isGenerating: false } : s)}));
+    } catch (e) {
+      console.error(e);
+      setError(`Failed to generate image for scene setting.`);
+      setProject(p => ({ ...p, sceneSettings: p.sceneSettings.map(s => s.id === id ? { ...s, isGenerating: false } : s)}));
+    }
+  }, [project.sceneSettings, project.artStyle, project.aspectRatio, setProject]);
 
   const handleDeleteCharacter = (id: string) => {
     setProject(p => ({
@@ -216,36 +248,127 @@ const Step4_Characters: React.FC<Props> = ({ project, setProject, goToNextStep }
         characters: p.characters.filter(c => c.id !== id)
     }));
   };
+  
+  const handleEditSceneSetting = (scene: SceneSetting) => {
+    setEditingScene(scene);
+    setEditedSceneDescription(scene.description);
+    setIsSceneEditModalOpen(true);
+  };
 
-  const canProceed = project.characters.length > 0 && project.characters.every(c => c.imageUrl);
+  const handleCancelEditScene = () => {
+    setIsSceneEditModalOpen(false);
+    setEditingScene(null);
+    setEditedSceneDescription('');
+  };
+
+  const handleSaveSceneSetting = () => {
+    if (!editingScene) return;
+    setProject(p => ({
+        ...p,
+        sceneSettings: p.sceneSettings.map(s =>
+            s.id === editingScene.id ? { ...s, description: editedSceneDescription } : s
+        )
+    }));
+    handleCancelEditScene();
+  };
+
+  const handleDeleteSceneSetting = (sceneId: string) => {
+    if (window.confirm("Are you sure you want to delete this scene setting? This action cannot be undone.")) {
+        setProject(p => ({
+            ...p,
+            sceneSettings: p.sceneSettings.filter(s => s.id !== sceneId)
+        }));
+    }
+  };
+
+
+  const canProceed = project.characters.length > 0 && 
+                     project.characters.every(c => c.imageUrl) &&
+                     project.sceneSettings.length > 0 &&
+                     project.sceneSettings.some(s => s.imageUrl);
 
   return (
     <div>
-        <h2 className="text-2xl font-bold text-center mb-6 text-brand-text-light">Character Designs</h2>
-        {project.characters.length === 0 && isLoading && <Spinner message="Extracting characters..."/>}
+        <div className="space-y-8 max-h-[65vh] overflow-y-auto pr-4 -mr-4">
+            <div>
+                <h2 className="text-2xl font-bold text-center mb-6 text-brand-text-light">Character Designs</h2>
+                {isLoading && <Spinner message="Extracting characters..."/>}
+                {error && <p className="text-red-500 text-center my-4">{error}</p>}
+                
+                {project.characters.length > 0 && (
+                    <div className="space-y-6">
+                        {project.characters.map(character => (
+                            <CharacterCard 
+                                key={character.id}
+                                character={character}
+                                onUpdate={handleUpdateCharacter}
+                                onRegenerate={handleGenerateCharImage}
+                                onDelete={handleDeleteCharacter}
+                                artStyle={project.artStyle}
+                                aspectRatio={project.aspectRatio}
+                            />
+                        ))}
+                    </div>
+                )}
+            </div>
 
-        {error && <p className="text-red-500 text-center">{error}</p>}
+            <div>
+                <h2 className="text-2xl font-bold text-center my-6 text-brand-text-light">Scene Settings</h2>
+                 {project.sceneSettings.length > 0 && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {project.sceneSettings.map(scene => (
+                            <div key={scene.id} className="bg-brand-secondary rounded-lg shadow-md flex flex-col overflow-hidden">
+                               <div className="aspect-video bg-brand-bg flex items-center justify-center">
+                                    {scene.isGenerating && <Spinner />}
+                                    {!scene.isGenerating && scene.imageUrl && (
+                                        <img src={scene.imageUrl} alt={scene.description} className="object-cover w-full h-full" />
+                                    )}
+                               </div>
+                               <div className="p-4 flex flex-col flex-grow">
+                                <p className="text-sm text-brand-text-dark flex-grow min-h-[4.5rem]">{scene.description}</p>
+                                <div className="mt-4 space-y-2">
+                                    <Button onClick={() => handleGenerateSceneImage(scene.id)} isLoading={scene.isGenerating} size="sm" className="w-full">
+                                        {scene.imageUrl ? 'Regenerate' : 'Generate'}
+                                    </Button>
+                                    <div className="flex space-x-2 mt-2">
+                                        <Button variant="secondary" onClick={() => handleEditSceneSetting(scene)} size="sm" className="flex-1">Edit</Button>
+                                        <Button variant="danger" onClick={() => handleDeleteSceneSetting(scene.id)} size="sm" className="flex-1">Delete</Button>
+                                    </div>
+                                </div>
+                               </div>
+                            </div>
+                        ))}
+                    </div>
+                 )}
+            </div>
+        </div>
         
-        {project.characters.length > 0 && (
-            <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-4 -mr-4">
-                {project.characters.map(character => (
-                    <CharacterCard 
-                        key={character.id}
-                        character={character}
-                        onUpdate={handleUpdateCharacter}
-                        onRegenerate={handleGenerateImage}
-                        onDelete={handleDeleteCharacter}
+         <Modal
+            isOpen={isSceneEditModalOpen}
+            onClose={handleCancelEditScene}
+            title="Edit Scene Description"
+            footer={
+                <div className="flex gap-2">
+                    <Button variant="secondary" onClick={handleCancelEditScene}>Cancel</Button>
+                    <Button onClick={handleSaveSceneSetting}>Save Changes</Button>
+                </div>
+            }
+        >
+            {editingScene && (
+                <div className="space-y-4">
+                    {editingScene.imageUrl && (
+                        <img src={editingScene.imageUrl} alt={editingScene.description} className="w-full h-auto rounded-lg object-contain max-h-64 bg-brand-bg" />
+                    )}
+                    <Textarea 
+                        label="Description"
+                        value={editedSceneDescription}
+                        onChange={(e) => setEditedSceneDescription(e.target.value)}
+                        rows={5}
                     />
-                ))}
-            </div>
-        )}
-        
-        {project.characters.length === 0 && !isLoading && !error && (
-            <div className="text-center p-8">
-                <p className="mb-4">No characters found. You can extract them from the screenplay.</p>
-                <Button onClick={handleExtractCharacters}>Extract Characters</Button>
-            </div>
-        )}
+                </div>
+            )}
+        </Modal>
+
 
          <div className="flex justify-end pt-6 mt-4 border-t border-brand-border">
             <Button onClick={goToNextStep} disabled={!canProceed}>

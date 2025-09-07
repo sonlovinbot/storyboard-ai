@@ -2,7 +2,7 @@
 import React, { useCallback, useState } from 'react';
 
 interface ImageUploaderProps {
-  onImageUpload: (base64: string, mimeType: string) => void;
+  onImageUpload: (base64: string) => void;
   label: string;
 }
 
@@ -15,7 +15,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload, label }) =
       const reader = new FileReader();
       reader.onload = (e) => {
         const base64 = e.target?.result as string;
-        onImageUpload(base64, file.type);
+        onImageUpload(base64);
         setFileName(file.name);
       };
       reader.readAsDataURL(file);

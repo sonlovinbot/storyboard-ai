@@ -52,6 +52,9 @@ export interface Shot {
   notes: string;
   vo: string;
   sfx: string;
+  lighting: string;
+  music: string;
+  dialogue: Dialogue[];
 }
 
 export interface StoryboardPanel {
@@ -59,6 +62,14 @@ export interface StoryboardPanel {
   imageUrl?: string;
   prompt?: string;
   isGenerating?: boolean;
+  referenceImageIds?: string[];
+}
+
+export interface SceneSetting {
+    id: string;
+    description: string;
+    imageUrl?: string;
+    isGenerating?: boolean;
 }
 
 export interface Project {
@@ -73,4 +84,6 @@ export interface Project {
   storyboard: StoryboardPanel[];
   styleGuide: string;
   artStyle: string;
+  aspectRatio: string;
+  sceneSettings: SceneSetting[];
 }

@@ -1,7 +1,6 @@
-
 import React, { useState, useCallback } from 'react';
 import { Step, Project } from './types';
-import { BREADCRUMB_STEPS, INITIAL_PROJECT_STATE } from './constants';
+import { BREADCRUMB_STEPS, getInitialProjectState } from './constants';
 import Breadcrumb from './components/Breadcrumb';
 import Step1_Project from './components/Step1_Project';
 import Step2_Idea from './components/Step2_Idea';
@@ -10,10 +9,11 @@ import Step4_Characters from './components/Step4_Characters';
 import Step5_Shotlist from './components/Step5_Shotlist';
 import Step6_Storyboard from './components/Step6_Storyboard';
 import Step7_Export from './components/Step7_Export';
+import Button from './components/ui/Button';
 
 function App() {
   const [currentStep, setCurrentStep] = useState<Step>(Step.Project);
-  const [project, setProject] = useState<Project>(INITIAL_PROJECT_STATE);
+  const [project, setProject] = useState<Project>(getInitialProjectState());
 
   const goToNextStep = useCallback(() => {
     setCurrentStep(prev => (prev < BREADCRUMB_STEPS.length - 1 ? prev + 1 : prev));
@@ -22,6 +22,13 @@ function App() {
   const goToStep = useCallback((step: Step) => {
     setCurrentStep(step);
   }, []);
+
+  const handleResetProject = () => {
+    if (window.confirm("Are you sure you want to reset the project? All progress will be permanently deleted.")) {
+      setProject(getInitialProjectState());
+      setCurrentStep(Step.Project);
+    }
+  };
 
   const renderStep = () => {
     switch (currentStep) {
@@ -51,9 +58,13 @@ function App() {
             case Step.Project: return project.title !== "";
             case Step.Idea: return project.storyConcept !== "";
             case Step.Screenplay: return project.screenplay.length > 0;
-            case Step.Characters: return project.characters.length > 0 && project.characters.every(c => c.imageUrl);
+            case Step.Characters: 
+                return project.characters.length > 0 && 
+                       project.characters.every(c => c.imageUrl) &&
+                       project.sceneSettings.length > 0 &&
+                       project.sceneSettings.some(s => s.imageUrl);
             case Step.Shotlist: return project.shotlist.length > 0;
-            case Step.Storyboard: return project.storyboard.length > 0 && project.storyboard.every(p => p.imageUrl);
+            case Step.Storyboard: return project.storyboard.length > 0 && project.storyboard.filter(p => p.imageUrl).length >= 6;
             case Step.Export: return false; 
         }
     }
@@ -68,11 +79,20 @@ function App() {
 
   return (
     <div className="min-h-screen container mx-auto p-4 md:p-8 flex flex-col">
-      <header className="text-center mb-8">
-        <h1 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-500">
-          Storyboard AI
-        </h1>
-        <p className="text-brand-text-dark mt-2">From Idea to Screenplay to Storyboard</p>
+      <header className="relative text-center mb-8">
+        <div>
+          <h1 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-500">
+            Storyboard AI
+          </h1>
+          <p className="text-brand-text-dark mt-2">From Idea to Screenplay to Storyboard</p>
+        </div>
+        {currentStep > Step.Project && (
+          <div className="absolute top-1/2 -translate-y-1/2 right-0">
+            <Button variant="danger" onClick={handleResetProject}>
+              Reset Project
+            </Button>
+          </div>
+        )}
       </header>
       
       <Breadcrumb

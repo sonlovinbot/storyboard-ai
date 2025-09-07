@@ -1,5 +1,4 @@
-
-import { Step } from './types';
+import { Project } from './types';
 
 export const BREADCRUMB_STEPS = [
   "Project",
@@ -24,10 +23,12 @@ export const ART_STYLES = [
     "Cute Cartoon"
 ];
 
+export const ASPECT_RATIOS = ["16:9", "9:16", "1:1"];
+
 export const MAX_CHARACTERS_OPTIONS = [1, 2, 3, 4, 5];
 export const MAX_SCENES_OPTIONS = [4, 6, 8, 10, 12];
 
-export const INITIAL_PROJECT_STATE = {
+export const getInitialProjectState = (): Project => ({
   title: "",
   genre: GENRES[0],
   maxCharacters: 2,
@@ -39,4 +40,6 @@ export const INITIAL_PROJECT_STATE = {
   storyboard: [],
   styleGuide: "cinematic, hyper-realistic, high detail, 4k",
   artStyle: ART_STYLES[0],
-};
+  aspectRatio: ASPECT_RATIOS[0],
+  sceneSettings: [],
+});

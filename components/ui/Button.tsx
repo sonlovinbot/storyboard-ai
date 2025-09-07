@@ -4,12 +4,10 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
   variant?: 'primary' | 'secondary' | 'danger';
   isLoading?: boolean;
-  // FIX: Add 'size' prop to support different button sizes and fix type errors.
   size?: 'sm' | 'md';
 }
 
 const Button: React.FC<ButtonProps> = ({ children, variant = 'primary', isLoading = false, size = 'md', className = '', ...props }) => {
-  // FIX: Remove size-specific classes (padding, font-size) from baseClasses to be handled dynamically.
   const baseClasses = "inline-flex items-center justify-center rounded-md font-semibold shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-brand-surface disabled:opacity-50 disabled:cursor-not-allowed";
   
   const variantClasses = {
@@ -18,7 +16,6 @@ const Button: React.FC<ButtonProps> = ({ children, variant = 'primary', isLoadin
     danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
   };
 
-  // FIX: Define classes for different button sizes.
   const sizeClasses = {
     sm: 'px-2.5 py-1.5 text-xs',
     md: 'px-4 py-2 text-sm',
@@ -26,9 +23,9 @@ const Button: React.FC<ButtonProps> = ({ children, variant = 'primary', isLoadin
 
   return (
     <button
-      // FIX: Apply the appropriate size class based on the 'size' prop.
       className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
-      disabled={isLoading || props.disabled}
+      // FIX: Removed isLoading from disabled check to allow click events for stopping processes.
+      disabled={props.disabled}
       {...props}
     >
       {isLoading && (
