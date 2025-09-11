@@ -70,6 +70,7 @@ export interface SceneSetting {
     description: string;
     imageUrl?: string;
     isGenerating?: boolean;
+    referenceImage?: string; // base64 data URL
 }
 
 export interface Project {

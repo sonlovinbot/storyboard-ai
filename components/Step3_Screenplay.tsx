@@ -16,8 +16,8 @@ interface Props {
 
 const SceneCard: React.FC<{ scene: Scene; onEdit: (scene: Scene) => void }> = ({ scene, onEdit }) => {
   return (
-    <Card className="mb-4 bg-brand-bg/50">
-      <h3 className="text-xl font-bold text-indigo-400">{scene.title} (Scene {scene.sceneNumber})</h3>
+    <Card className="mb-4 bg-brand-bg/50 dark:bg-brand-secondary/30">
+      <h3 className="text-xl font-bold text-brand-primary">{scene.title} (Scene {scene.sceneNumber})</h3>
       <p className="mt-2 text-brand-text-dark italic">{scene.description}</p>
       <div className="mt-4 space-y-3">
         {scene.dialogue.map((d, i) => (
@@ -120,7 +120,7 @@ const Step3_Screenplay: React.FC<Props> = ({ project, setProject, goToNextStep }
               <SceneCard key={scene.sceneNumber} scene={scene} onEdit={handleOpenEditModal} />
             ))}
           </div>
-          <div className="flex justify-end items-center pt-6 mt-4 border-t border-brand-border gap-2">
+          <div className="flex justify-end items-center pt-6 mt-4 border-t border-brand-border/50 gap-2">
             <Button variant="secondary" onClick={handleRegenerateClick} isLoading={isLoading}>
               Regenerate
             </Button>
@@ -160,7 +160,7 @@ const Step3_Screenplay: React.FC<Props> = ({ project, setProject, goToNextStep }
             <h4 className="text-lg font-semibold text-brand-text-light border-b border-brand-border pb-2">Dialogue</h4>
             <div className="space-y-4 max-h-60 overflow-y-auto pr-2">
               {editingScene.dialogue.map((d, i) => (
-                <div key={i} className="p-4 bg-brand-secondary rounded-lg border border-brand-border space-y-3">
+                <div key={i} className="p-4 bg-brand-secondary/50 rounded-lg border border-brand-border/50 space-y-3">
                    <Input
                     label={`Character`}
                     id={`char-${i}`}

@@ -110,7 +110,7 @@ const CharacterCard: React.FC<{
     };
     
     return (
-        <div className="bg-brand-secondary p-4 rounded-lg grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+        <div className="bg-brand-secondary/50 border border-brand-border/20 p-4 rounded-lg grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
             <div className="md:col-span-1">
                 <div className="aspect-[3/4] bg-brand-bg rounded-md flex items-center justify-center sticky top-24">
                    {character.isGenerating && <Spinner />}
@@ -131,14 +131,14 @@ const CharacterCard: React.FC<{
                     onUploadReference={handleUploadReference}
                 />
 
-                <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-brand-border">
+                <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-brand-border/50">
                     {isEditing ? (
                         <>
                             <Button onClick={handleSave} size="sm">Save</Button>
                             <Button onClick={handleCancel} variant="secondary" size="sm">Cancel</Button>
                         </>
                     ) : (
-                        <Button onClick={() => setIsEditing(true)} size="sm">Edit</Button>
+                        <Button onClick={() => setIsEditing(true)} size="sm" variant="secondary">Edit</Button>
                     )}
                     <Button onClick={() => onRegenerate(character.id)} isLoading={character.isGenerating} size="sm">
                         {character.imageUrl ? 'Regenerate' : 'Generate'}
@@ -156,7 +156,6 @@ const Step4_Characters: React.FC<Props> = ({ project, setProject, goToNextStep }
   
   const [isSceneEditModalOpen, setIsSceneEditModalOpen] = useState(false);
   const [editingScene, setEditingScene] = useState<SceneSetting | null>(null);
-  const [editedSceneDescription, setEditedSceneDescription] = useState('');
 
   const handleExtractCharacters = useCallback(async () => {
     if (project.characters.length > 0) return;
@@ -233,7 +232,13 @@ const Step4_Characters: React.FC<Props> = ({ project, setProject, goToNextStep }
 
     setProject(p => ({ ...p, sceneSettings: p.sceneSettings.map(s => s.id === id ? { ...s, isGenerating: true } : s)}));
     try {
-      const base64Image = await geminiService.generateSceneSettingImage(scene.description, project.artStyle, project.aspectRatio);
+      let refImage;
+      if (scene.referenceImage) {
+        const [meta, data] = scene.referenceImage.split(',');
+        const mimeType = meta.match(/:(.*?);/)?.[1];
+        if(data && mimeType) refImage = { data, mimeType };
+      }
+      const base64Image = await geminiService.generateSceneSettingImage(scene.description, project.artStyle, project.aspectRatio, refImage);
       setProject(p => ({ ...p, sceneSettings: p.sceneSettings.map(s => s.id === id ? { ...s, imageUrl: `data:image/png;base64,${base64Image}`, isGenerating: false } : s)}));
     } catch (e) {
       console.error(e);
@@ -250,15 +255,19 @@ const Step4_Characters: React.FC<Props> = ({ project, setProject, goToNextStep }
   };
   
   const handleEditSceneSetting = (scene: SceneSetting) => {
-    setEditingScene(scene);
-    setEditedSceneDescription(scene.description);
+    setEditingScene(JSON.parse(JSON.stringify(scene)));
     setIsSceneEditModalOpen(true);
   };
 
   const handleCancelEditScene = () => {
     setIsSceneEditModalOpen(false);
     setEditingScene(null);
-    setEditedSceneDescription('');
+  };
+  
+  const handleEditingSceneChange = (field: keyof SceneSetting, value: string) => {
+    if (editingScene) {
+        setEditingScene(prev => prev ? { ...prev, [field]: value } : null);
+    }
   };
 
   const handleSaveSceneSetting = () => {
@@ -266,7 +275,7 @@ const Step4_Characters: React.FC<Props> = ({ project, setProject, goToNextStep }
     setProject(p => ({
         ...p,
         sceneSettings: p.sceneSettings.map(s =>
-            s.id === editingScene.id ? { ...s, description: editedSceneDescription } : s
+            s.id === editingScene.id ? editingScene : s
         )
     }));
     handleCancelEditScene();
@@ -317,7 +326,7 @@ const Step4_Characters: React.FC<Props> = ({ project, setProject, goToNextStep }
                  {project.sceneSettings.length > 0 && (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {project.sceneSettings.map(scene => (
-                            <div key={scene.id} className="bg-brand-secondary rounded-lg shadow-md flex flex-col overflow-hidden">
+                            <div key={scene.id} className="bg-brand-secondary/50 border border-brand-border/20 rounded-lg shadow-md flex flex-col overflow-hidden">
                                <div className="aspect-video bg-brand-bg flex items-center justify-center">
                                     {scene.isGenerating && <Spinner />}
                                     {!scene.isGenerating && scene.imageUrl && (
@@ -346,7 +355,7 @@ const Step4_Characters: React.FC<Props> = ({ project, setProject, goToNextStep }
          <Modal
             isOpen={isSceneEditModalOpen}
             onClose={handleCancelEditScene}
-            title="Edit Scene Description"
+            title="Edit Scene Setting"
             footer={
                 <div className="flex gap-2">
                     <Button variant="secondary" onClick={handleCancelEditScene}>Cancel</Button>
@@ -361,16 +370,26 @@ const Step4_Characters: React.FC<Props> = ({ project, setProject, goToNextStep }
                     )}
                     <Textarea 
                         label="Description"
-                        value={editedSceneDescription}
-                        onChange={(e) => setEditedSceneDescription(e.target.value)}
+                        value={editingScene.description}
+                        onChange={(e) => handleEditingSceneChange('description', e.target.value)}
                         rows={5}
                     />
+                    <ImageUploader 
+                        label="Reference Image"
+                        onImageUpload={(base64) => handleEditingSceneChange('referenceImage', base64)}
+                    />
+                    {editingScene.referenceImage && (
+                        <div>
+                            <h4 className="text-sm font-semibold text-brand-text-dark">Reference Image Preview</h4>
+                            <img src={editingScene.referenceImage} alt="Reference" className="mt-1 rounded-md max-h-24 object-cover" />
+                        </div>
+                    )}
                 </div>
             )}
         </Modal>
 
 
-         <div className="flex justify-end pt-6 mt-4 border-t border-brand-border">
+         <div className="flex justify-end pt-6 mt-4 border-t border-brand-border/50">
             <Button onClick={goToNextStep} disabled={!canProceed}>
                 Next: Generate Shotlist
             </Button>

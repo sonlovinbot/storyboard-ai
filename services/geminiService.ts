@@ -247,23 +247,48 @@ export const extractSceneLocations = async (screenplay: Scene[]): Promise<{ loca
     return { locations, prompt };
 };
 
-export const generateSceneSettingImage = async (description: string, artStyle: string, aspectRatio: string): Promise<string> => {
+export const generateSceneSettingImage = async (
+    description: string, 
+    artStyle: string, 
+    aspectRatio: string,
+    referenceImage?: {mimeType: string, data: string}
+): Promise<string> => {
     const prompt = `
     Generate a beautiful, cinematic background image for a key scene setting. No characters.
     
     Setting Description: ${description}
     Style: ${artStyle}, environmental concept art.
     `;
-    const response = await ai.models.generateImages({
-        model: imageModel,
-        prompt: prompt,
-        config: {
-            numberOfImages: 1,
-            outputMimeType: 'image/png',
-            aspectRatio: aspectRatio as '1:1' | '16:9' | '9:16' | '4:3' | '3:4',
-        },
-    });
-    return response.generatedImages[0].image.imageBytes;
+
+    if (referenceImage) {
+        const textPart = { text: `Redevelop this scene setting based on the reference image and the following details. Make sure the output is just the scene, no characters.\n\n${prompt}`};
+        const imagePart = { inlineData: referenceImage };
+        const response = await ai.models.generateContent({
+            model: multimodalModel,
+            contents: { parts: [imagePart, textPart] },
+            config: {
+                responseModalities: [Modality.IMAGE, Modality.TEXT],
+            },
+        });
+
+        for (const part of response.candidates[0].content.parts) {
+            if (part.inlineData) {
+                return part.inlineData.data;
+            }
+        }
+        throw new Error("No image generated from reference for scene setting.");
+    } else {
+        const response = await ai.models.generateImages({
+            model: imageModel,
+            prompt: prompt,
+            config: {
+                numberOfImages: 1,
+                outputMimeType: 'image/png',
+                aspectRatio: aspectRatio as '1:1' | '16:9' | '9:16' | '4:3' | '3:4',
+            },
+        });
+        return response.generatedImages[0].image.imageBytes;
+    }
 };
 
 export const generateStoryboardImage = async (

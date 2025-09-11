@@ -46,7 +46,7 @@ const Step1_Project: React.FC<Props> = ({ project, setProject, goToNextStep }) =
     <div className="max-w-2xl mx-auto">
       <h2 className="text-2xl font-bold text-center mb-6 text-brand-text-light">Project Setup</h2>
       
-      <div className="bg-brand-secondary p-6 md:p-8 rounded-lg shadow-lg">
+      <div className="bg-brand-secondary/50 p-6 md:p-8 rounded-lg shadow-lg border border-brand-border/20">
         <h3 className="text-xl font-semibold text-center mb-6 text-brand-text-light">Start a New Project</h3>
         <div className="space-y-6">
           <Input 
@@ -76,7 +76,7 @@ const Step1_Project: React.FC<Props> = ({ project, setProject, goToNextStep }) =
             </Select>
           </div>
         </div>
-        <div className="flex justify-end pt-4 mt-4 border-t border-brand-border">
+        <div className="flex justify-end pt-4 mt-4 border-t border-brand-border/50">
           <Button onClick={goToNextStep} disabled={!canProceed}>
             Next: Share Idea
           </Button>
@@ -85,14 +85,14 @@ const Step1_Project: React.FC<Props> = ({ project, setProject, goToNextStep }) =
 
       <div className="relative my-8">
         <div className="absolute inset-0 flex items-center" aria-hidden="true">
-          <div className="w-full border-t border-brand-border" />
+          <div className="w-full border-t border-brand-border/50" />
         </div>
         <div className="relative flex justify-center">
-          <span className="bg-brand-surface px-2 text-sm text-brand-text-dark">OR</span>
+          <span className="bg-brand-surface/50 dark:bg-brand-surface/20 backdrop-blur-sm px-2 text-sm text-brand-text-dark rounded-full">OR</span>
         </div>
       </div>
 
-      <div className="bg-brand-secondary p-6 md:p-8 rounded-lg shadow-lg text-center">
+      <div className="bg-brand-secondary/50 p-6 md:p-8 rounded-lg shadow-lg text-center border border-brand-border/20">
         <h3 className="text-xl font-semibold text-brand-text-light">Load Existing Project</h3>
         <p className="mt-2 text-sm text-brand-text-dark">Continue working on a project you saved earlier from the 'Export' step.</p>
         <Button variant="secondary" onClick={() => fileInputRef.current?.click()} className="mt-4">

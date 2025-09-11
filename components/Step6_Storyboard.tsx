@@ -20,7 +20,7 @@ const ShotDetail: React.FC<{ label: string; value?: string | null }> = ({ label,
   if (!value) return null;
   return (
     <div>
-      <span className="font-semibold text-green-400">{label}:</span>
+      <span className="font-semibold text-brand-primary">{label}:</span>
       <span className="ml-2 text-brand-text-light">{value}</span>
     </div>
   );
@@ -67,7 +67,7 @@ const StoryboardCard: React.FC<StoryboardCardProps> = ({ panel, sceneTitle, onGe
     };
 
     return (
-        <div className="border border-brand-border bg-brand-secondary/50 rounded-lg overflow-hidden flex flex-col">
+        <div className="border border-brand-border/20 bg-brand-secondary/30 rounded-lg overflow-hidden flex flex-col">
             <div className="aspect-video bg-brand-bg flex items-center justify-center relative">
                 {panel.isGenerating && <Spinner />}
                 {!panel.isGenerating && panel.imageUrl && (
@@ -79,10 +79,10 @@ const StoryboardCard: React.FC<StoryboardCardProps> = ({ panel, sceneTitle, onGe
             </div>
             <div className="p-4 flex-grow flex flex-col justify-between">
                 <div>
-                    <h4 className="font-bold text-indigo-400">Scene {panel.shot.sceneNumber}, Shot {panel.shot.shotNumber}</h4>
+                    <h4 className="font-bold text-brand-primary">Scene {panel.shot.sceneNumber}, Shot {panel.shot.shotNumber}</h4>
                     <p className="text-sm text-brand-text-dark mt-1">{panel.shot.description}</p>
                     
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-xs mt-3 border-t border-brand-border pt-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-xs mt-3 border-t border-brand-border/50 pt-3">
                         <ShotDetail label="Shot Type" value={panel.shot.shotSize} />
                         <ShotDetail label="Duration" value={panel.shot.ert} />
                         <ShotDetail label="Scene" value={sceneTitle} />
@@ -92,7 +92,7 @@ const StoryboardCard: React.FC<StoryboardCardProps> = ({ panel, sceneTitle, onGe
                     </div>
 
                     {panel.shot.dialogue && panel.shot.dialogue.length > 0 && (
-                        <div className="mt-3 space-y-2 border-t border-brand-border pt-3">
+                        <div className="mt-3 space-y-2 border-t border-brand-border/50 pt-3">
                         {panel.shot.dialogue.map((d, i) => (
                             <div key={i} className="bg-green-900/30 border-l-4 border-green-400 rounded p-2 text-sm">
                             <p className="font-bold text-green-300">{d.character.toUpperCase()}:</p>
@@ -103,14 +103,14 @@ const StoryboardCard: React.FC<StoryboardCardProps> = ({ panel, sceneTitle, onGe
                     )}
 
                     {(panel.shot.music || panel.shot.sfx) && (
-                        <div className="flex flex-wrap gap-2 mt-3 border-t border-brand-border pt-3">
+                        <div className="flex flex-wrap gap-2 mt-3 border-t border-brand-border/50 pt-3">
                             {panel.shot.music && <div className="text-xs bg-purple-500/20 text-purple-300 px-2 py-1 rounded-full flex items-center gap-1">♪ {panel.shot.music}</div>}
                             {panel.shot.sfx && <div className="text-xs bg-amber-500/20 text-amber-300 px-2 py-1 rounded-full flex items-center gap-1">🔊 {panel.shot.sfx}</div>}
                         </div>
                     )}
                 </div>
 
-                <div className="mt-4 pt-4 border-t border-brand-border flex flex-col space-y-2">
+                <div className="mt-4 pt-4 border-t border-brand-border/50 flex flex-col space-y-2">
                    <Button onClick={onGenerate} isLoading={panel.isGenerating} size="sm">
                        {panel.imageUrl ? "Regenerate" : "Generate"}
                    </Button>
@@ -393,7 +393,7 @@ const Step6_Storyboard: React.FC<Props> = ({ project, setProject, goToNextStep }
     <div>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-brand-text-light">Storyboard</h2>
-        <Button onClick={isGeneratingAll ? handleStopRunAll : handleRunAll} isLoading={isGeneratingAll}>
+        <Button onClick={isGeneratingAll ? handleStopRunAll : handleRunAll} isLoading={isGeneratingAll} variant={isGeneratingAll ? 'danger' : 'primary'}>
             {isGeneratingAll ? 'STOP' : 'RUN ALL'}
         </Button>
       </div>
@@ -414,7 +414,7 @@ const Step6_Storyboard: React.FC<Props> = ({ project, setProject, goToNextStep }
         })}
       </div>
 
-       <div className="flex justify-end pt-6 mt-4 border-t border-brand-border">
+       <div className="flex justify-end pt-6 mt-4 border-t border-brand-border/50">
         <Button onClick={goToNextStep} disabled={!canProceed}>
             Next: Export
         </Button>
@@ -447,7 +447,7 @@ const Step6_Storyboard: React.FC<Props> = ({ project, setProject, goToNextStep }
                                 title={img.title}
                                 draggable
                                 onDragStart={(e) => handleDragStartPalette(e, img.id)}
-                                className="h-20 w-20 object-cover rounded cursor-pointer hover:ring-2 ring-indigo-500 transition-all"
+                                className="h-20 w-20 object-cover rounded cursor-pointer hover:ring-2 ring-brand-primary transition-all"
                                 onClick={() => handleAddReferenceFromPalette(img)}
                             />
                         ))}

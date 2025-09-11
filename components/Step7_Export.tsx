@@ -20,7 +20,7 @@ const generateHtmlContent = (project: Project): string => {
   
   return `
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -30,106 +30,103 @@ const generateHtmlContent = (project: Project): string => {
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap');
         :root {
-            --bg: #f0f2f5; --fg: #1c1e21; --muted: #606770; --accent: #4a90e2; --surface: #ffffff;
-            --border: #dddfe2; --shadow: rgba(0, 0, 0, 0.1); --font-sans: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --color-bg: 248 249 250; --color-surface: 255 255 255; --color-primary: 79 70 229; --color-secondary: 228 229 233;
+            --color-text-light: 33 37 41; --color-text-dark: 108 117 125; --color-border: 222 226 230;
+            --shadow: rgba(0, 0, 0, 0.1); --font-sans: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
-        [data-theme="dark"] {
-            --bg: #0f101a; --fg: #e4e6eb; --muted: #b0b3b8; --accent: #58a6ff; --surface: #1c1e2e;
-            --border: #3e4042; --shadow: rgba(0, 0, 0, 0.3);
+        html.dark {
+            --color-bg: 18 18 28; --color-surface: 29 29 43; --color-primary: 99 102 241; --color-secondary: 45 45 61;
+            --color-text-light: 248 249 250; --color-text-dark: 173 181 189; --color-border: 52 58 64; --shadow: rgba(0, 0, 0, 0.3);
         }
         *, *::before, *::after { box-sizing: border-box; }
         body {
-            font-family: var(--font-sans); background-color: var(--bg); color: var(--fg); margin: 0; padding-top: 80px;
+            font-family: var(--font-sans); background-color: rgb(var(--color-bg)); color: rgb(var(--color-text-light)); margin: 0; padding-top: 80px;
             font-size: 16px; line-height: 1.6; transition: background-color 0.3s, color 0.3s;
-            background-image: radial-gradient(circle at 1px 1px, var(--border) 1px, transparent 0);
+            background-image: radial-gradient(circle at 1px 1px, rgb(var(--color-border) / 0.5) 1px, transparent 0);
             background-size: 2rem 2rem;
         }
         .container { max-width: 1400px; margin: 0 auto; padding: 1rem 2rem; }
         h1, h2, h3, h4 { margin: 0; line-height: 1.3; font-weight: 600; }
         h1 { font-size: 2.8rem; letter-spacing: -1px; } 
-        h2 { font-size: 2.2rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; margin-top: 4rem; margin-bottom: 2rem; }
-        a { color: var(--accent); text-decoration: none; }
+        h2 { font-size: 2.2rem; border-bottom: 1px solid rgb(var(--color-border)); padding-bottom: 0.75rem; margin-top: 4rem; margin-bottom: 2rem; }
+        a { color: rgb(var(--color-primary)); text-decoration: none; }
         .hidden { display: none !important; }
         
         /* Glassmorphism Card */
         .card {
-            background: color-mix(in srgb, var(--surface) 50%, transparent);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid color-mix(in srgb, var(--border) 30%, transparent);
-            border-radius: 16px; padding: 1.5rem;
+            background: rgb(var(--color-surface) / 0.5); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgb(var(--color-border) / 0.2); border-radius: 16px; padding: 1.5rem;
             box-shadow: 0 8px 32px 0 var(--shadow);
             transition: transform 0.3s, box-shadow 0.3s;
         }
-        .card:hover { transform: translateY(-5px); box-shadow: 0 12px 40px 0 color-mix(in srgb, var(--shadow) 150%, transparent); }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 12px 40px 0 rgb(var(--color-primary) / 0.1); }
 
         /* Header */
         .app-header {
             position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-            background: color-mix(in srgb, var(--surface) 70%, transparent);
-            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            border-bottom: 1px solid var(--border); padding: 0.75rem 2rem;
+            background: rgb(var(--color-surface) / 0.8); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgb(var(--color-border)); padding: 0.75rem 2rem;
             display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem;
         }
         .header-title { font-size: 1.25rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .header-stats { display: flex; gap: 1rem; font-size: 0.9rem; color: var(--muted); }
-        .header-controls input, .header-controls button {
-            background-color: var(--surface); border: 1px solid var(--border); color: var(--fg);
-            border-radius: 8px; padding: 0.5rem 0.75rem; font-size: 0.9rem;
+        .header-stats { display: flex; gap: 1rem; font-size: 0.9rem; color: rgb(var(--color-text-dark)); }
+        .header-controls button {
+            background-color: rgb(var(--color-secondary)); border: 1px solid rgb(var(--color-border)); color: rgb(var(--color-text-light));
+            border-radius: 999px; padding: 0.5rem; font-size: 0.9rem; cursor: pointer; line-height: 1;
         }
-        .header-controls button { cursor: pointer; }
 
         /* Table of Contents */
         .toc ol { display: flex; flex-wrap: wrap; justify-content: center; list-style: none; margin: 0; padding: 0; gap: 1.5rem; }
 
         /* Section Specific */
-        #idea blockquote { border-left: 4px solid var(--accent); padding-left: 1rem; margin-left: 0; font-style: italic; color: var(--muted); }
+        #idea blockquote { border-left: 4px solid rgb(var(--color-primary)); padding-left: 1rem; margin-left: 0; font-style: italic; color: rgb(var(--color-text-dark)); }
         
         /* Characters */
         .character-grid { display: grid; gap: 2rem; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); }
         .character-card { padding: 0; overflow: hidden; display: flex; flex-direction: column; }
-        .character-image-container { width: 100%; background-color: var(--bg); display: flex; align-items: center; justify-content: center; }
+        .character-image-container { width: 100%; background-color: rgb(var(--color-bg)); display: flex; align-items: center; justify-content: center; }
         .character-image-container img { width: 100%; height: 100%; object-fit: contain; }
         .character-details { padding: 1.5rem; flex-grow: 1; display: flex; flex-direction: column; }
         .character-details h3 { font-size: 1.5rem; margin-bottom: 0.5rem; }
-        .character-details ul { list-style: none; padding: 0; margin-top: 1rem; color: var(--muted); }
+        .character-details ul { list-style: none; padding: 0; margin-top: 1rem; color: rgb(var(--color-text-dark)); }
         .character-details ul li { margin-bottom: 0.5rem; }
 
         /* Storyboard */
         .storyboard-grid { display: grid; gap: 2rem; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); align-items: start; }
         .storyboard-card { padding: 0; overflow: hidden; }
-        .storyboard-image-container { width: 100%; background-color: var(--bg); }
+        .storyboard-image-container { width: 100%; background-color: rgb(var(--color-bg)); }
         .storyboard-image-container img { width: 100%; height: auto; display: block; cursor: pointer; }
-        .storyboard-image-container .placeholder { width: 100%; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; color: var(--muted); }
+        .storyboard-image-container .placeholder { width: 100%; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; color: rgb(var(--color-text-dark)); }
         .storyboard-details { padding: 1.5rem; }
-        .storyboard-details h4 { font-size: 1.2rem; color: var(--accent); margin-bottom: 0.5rem; }
-        .shot-main-description { margin-bottom: 1rem; color: var(--muted); }
+        .storyboard-details h4 { font-size: 1.2rem; color: rgb(var(--color-primary)); margin-bottom: 0.5rem; }
+        .shot-main-description { margin-bottom: 1rem; color: rgb(var(--color-text-dark)); }
         .toggle-details-btn {
-            background: none; border: 1px solid var(--border); color: var(--muted); font-weight: 500; cursor: pointer;
+            background: none; border: 1px solid rgb(var(--color-border)); color: rgb(var(--color-text-dark)); font-weight: 500; cursor: pointer;
             padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.8rem; margin-bottom: 1rem; transition: all 0.2s;
         }
-        .toggle-details-btn:hover { background-color: var(--surface); color: var(--fg); border-color: var(--accent); }
+        .toggle-details-btn:hover { background-color: rgb(var(--color-secondary)); color: rgb(var(--color-text-light)); border-color: rgb(var(--color-primary)); }
         .shot-extra-details { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-in-out, opacity 0.5s ease-in-out; opacity: 0; }
         .shot-extra-details.expanded { max-height: 1000px; opacity: 1; }
         .shot-details-grid {
             display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem 1rem; font-size: 0.9rem;
-            margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border);
+            margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid rgb(var(--color-border));
         }
-        .shot-details-grid div strong { color: var(--accent); }
+        .shot-details-grid div strong { color: rgb(var(--color-primary)); }
         .dialogue-block {
             background-color: #1e3a2b; color: #d1fae5; border-left: 4px solid #6ee7b7;
             padding: 0.75rem 1rem; border-radius: 4px; margin-bottom: 1rem; font-size: 0.95rem;
         }
-        [data-theme="light"] .dialogue-block { background-color: #f0fdf4; color: #14532d; border-left-color: #34d399; }
+        html:not(.dark) .dialogue-block { background-color: #f0fdf4; color: #14532d; border-left-color: #34d399; }
         .dialogue-block p { margin: 0 0 0.5rem 0; }
         .dialogue-block strong { text-transform: uppercase; color: #a7f3d0; }
-        [data-theme="light"] .dialogue-block strong { color: #064e3b; }
+        html:not(.dark) .dialogue-block strong { color: #064e3b; }
         .dialogue-block em { font-style: italic; }
         .shot-pills { display: flex; flex-wrap: wrap; gap: 0.5rem; }
         .shot-pills span { font-size: 0.8rem; padding: 0.25rem 0.75rem; border-radius: 9999px; display: inline-flex; align-items: center; gap: 0.25rem; }
         .music-pill { background-color: #3b306b; color: #c4b5fd; }
         .sfx-pill { background-color: #604620; color: #fcd34d; }
-        [data-theme="light"] .music-pill { background-color: #ede9fe; color: #5b21b6; }
-        [data-theme="light"] .sfx-pill { background-color: #fefce8; color: #854d0e; }
+        html:not(.dark) .music-pill { background-color: #ede9fe; color: #5b21b6; }
+        html:not(.dark) .sfx-pill { background-color: #fefce8; color: #854d0e; }
 
 
         /* Collapsible Text (for Character Bio) */
@@ -140,16 +137,16 @@ const generateHtmlContent = (project: Project): string => {
         }
         .collapsible-text:not(.expanded)::after {
             content: ''; position: absolute; bottom: 0; left: 0; right: 0;
-            height: 1.6em; background: linear-gradient(to top, var(--surface), transparent);
+            height: 1.6em; background: linear-gradient(to top, rgb(var(--color-surface)), transparent);
         }
         .collapsible-text.expanded { max-height: 1000px; /* large value */ }
         .toggle-text-btn {
-            background: none; border: none; color: var(--accent); font-weight: 600;
+            background: none; border: none; color: rgb(var(--color-primary)); font-weight: 600;
             cursor: pointer; padding: 0.25rem 0; margin-top: 0.5rem;
         }
 
         /* Footer & Utils */
-        .app-footer { text-align: center; margin-top: 4rem; padding: 2rem; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.9rem; }
+        .app-footer { text-align: center; margin-top: 4rem; padding: 2rem; border-top: 1px solid rgb(var(--color-border)); color: rgb(var(--color-text-dark)); font-size: 0.9rem; }
         #back-to-top { position: fixed; bottom: 1rem; right: 1rem; z-index: 50; }
         #lightbox { position: fixed; inset: 0; z-index: 200; background-color: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; padding: 2rem; cursor: pointer; }
         #lightbox img { max-width: 95%; max-height: 95%; object-fit: contain; border-radius: 8px; }
@@ -244,19 +241,30 @@ const generateHtmlContent = (project: Project): string => {
             
             // --- THEME ---
             const themeToggle = document.getElementById('theme-toggle');
-            const lsTheme = localStorage.getItem('theme');
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            let currentTheme = lsTheme || (prefersDark ? 'dark' : 'light');
             const applyTheme = (theme) => {
-                document.documentElement.setAttribute('data-theme', theme);
-                themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
+                const root = document.documentElement;
+                if (theme === 'dark') {
+                    root.classList.add('dark');
+                    themeToggle.innerHTML = '☀️'; // Sun icon
+                } else {
+                    root.classList.remove('dark');
+                    themeToggle.innerHTML = '🌙'; // Moon icon
+                }
             };
+
+            let currentTheme = localStorage.getItem('theme');
+            if (!currentTheme) {
+                currentTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            }
             applyTheme(currentTheme);
+
             themeToggle.addEventListener('click', () => {
-                currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
-                localStorage.setItem('theme', currentTheme);
-                applyTheme(currentTheme);
+                const root = document.documentElement;
+                const newTheme = root.classList.contains('dark') ? 'light' : 'dark';
+                localStorage.setItem('theme', newTheme);
+                applyTheme(newTheme);
             });
+
 
             // --- SCREENPLAY ---
             const screenplayContainer = document.getElementById('screenplay-content');
@@ -267,8 +275,8 @@ const generateHtmlContent = (project: Project): string => {
                     \`).join('');
                     const sceneEl = document.createElement('div');
                     sceneEl.innerHTML = \`
-                        <h3 style="font-size: 1.2rem; margin-top: 1.5rem;">\${escapeHtml(scene.title)}</h3>
-                        <p style="color: var(--muted);">\${escapeHtml(scene.description)}</p>
+                        <h3 style="font-size: 1.2rem; margin-top: 1.5rem; color: rgb(var(--color-primary));">\${escapeHtml(scene.title)}</h3>
+                        <p style="color: rgb(var(--color-text-dark));">\${escapeHtml(scene.description)}</p>
                         \${dialogueHtml}
                     \`;
                     screenplayContainer.appendChild(sceneEl);
@@ -467,8 +475,8 @@ const Step7_Export: React.FC<Props> = ({ project, setProject }) => {
       <p className="mb-8 text-brand-text-dark">Save your project progress or export the final storyboard as a standalone HTML file.</p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Project Data */}
-        <div className="bg-brand-secondary p-6 rounded-lg">
-          <h3 className="text-lg font-semibold text-indigo-400">Project Data</h3>
+        <div className="bg-brand-secondary/50 p-6 rounded-lg border border-brand-border/20">
+          <h3 className="text-lg font-semibold text-brand-primary">Project Data</h3>
           <p className="text-sm text-brand-text-dark my-2">Save all your work (screenplay, characters, images) to a JSON file. You can import this file later to continue where you left off.</p>
           <div className="flex flex-col space-y-3 mt-4">
             <Button onClick={handleExportJson}>Export Project (.json)</Button>
@@ -480,8 +488,8 @@ const Step7_Export: React.FC<Props> = ({ project, setProject }) => {
         </div>
 
         {/* Final Storyboard */}
-        <div className="bg-brand-secondary p-6 rounded-lg">
-          <h3 className="text-lg font-semibold text-indigo-400">Final Storyboard</h3>
+        <div className="bg-brand-secondary/50 p-6 rounded-lg border border-brand-border/20">
+          <h3 className="text-lg font-semibold text-brand-primary">Final Storyboard</h3>
           <p className="text-sm text-brand-text-dark my-2">Generate a professional, self-contained HTML file of your storyboard. Perfect for sharing and presenting.</p>
           <div className="flex flex-col space-y-3 mt-4">
              <Button onClick={handlePreviewHtml}>Preview Storyboard</Button>

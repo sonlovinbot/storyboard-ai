@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 interface BreadcrumbProps {
@@ -21,7 +20,7 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ steps, currentStep, onStepClick
               <div
                 className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold transition-all duration-300
                   ${index < currentStep ? 'bg-indigo-600 text-white' : ''}
-                  ${index === currentStep ? 'bg-indigo-500 ring-2 ring-offset-2 ring-offset-brand-surface ring-indigo-500 text-white' : ''}
+                  ${index === currentStep ? 'bg-brand-primary ring-2 ring-offset-2 ring-offset-brand-bg ring-brand-primary text-white' : ''}
                   ${index > currentStep ? 'bg-brand-secondary text-brand-text-dark' : ''}
                 `}
               >
@@ -37,7 +36,7 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ steps, currentStep, onStepClick
             </button>
 
             {index !== steps.length - 1 && (
-              <div className="hidden sm:block w-8 sm:w-16 h-0.5 bg-brand-border mx-2" />
+              <div className="hidden sm:block w-8 sm:w-16 h-0.5 bg-brand-border/50 mx-2" />
             )}
           </li>
         ))}

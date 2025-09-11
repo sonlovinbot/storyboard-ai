@@ -105,7 +105,7 @@ const Step5_Shotlist: React.FC<Props> = ({ project, setProject, goToNextStep }) 
         <>
           <div className="max-h-[60vh] overflow-y-auto pr-2 -mr-2">
             <table className="w-full text-sm text-left text-brand-text-dark">
-                <thead className="text-xs text-brand-text-light uppercase bg-brand-secondary/80 sticky top-0">
+                <thead className="text-xs text-brand-text-light uppercase bg-brand-surface/80 dark:bg-brand-surface/50 backdrop-blur sticky top-0">
                     <tr>
                         <th scope="col" className="px-4 py-3">Shot</th>
                         <th scope="col" className="px-4 py-3">Description</th>
@@ -122,7 +122,7 @@ const Step5_Shotlist: React.FC<Props> = ({ project, setProject, goToNextStep }) 
                 </thead>
                 <tbody>
                     {project.shotlist.map((shot, index) => (
-                        <tr key={`${shot.sceneNumber}-${shot.shotNumber}-${index}`} className="border-b border-brand-border hover:bg-brand-secondary/50">
+                        <tr key={`${shot.sceneNumber}-${shot.shotNumber}-${index}`} className="border-b border-brand-border/50 hover:bg-brand-secondary/50">
                             <td className="px-4 py-4 font-medium text-brand-text-light whitespace-nowrap">{shot.sceneNumber}.{shot.shotNumber}</td>
                             <td className="px-4 py-4 min-w-[250px]">{shot.description}</td>
                             <td className="px-4 py-4">{shot.vo}</td>
@@ -141,7 +141,7 @@ const Step5_Shotlist: React.FC<Props> = ({ project, setProject, goToNextStep }) 
                 </tbody>
             </table>
           </div>
-          <div className="flex justify-between items-center pt-6 mt-4 border-t border-brand-border">
+          <div className="flex justify-between items-center pt-6 mt-4 border-t border-brand-border/50">
             <Button variant="secondary" onClick={handleRegenerateClick}>
               Regenerate Shotlist
             </Button>

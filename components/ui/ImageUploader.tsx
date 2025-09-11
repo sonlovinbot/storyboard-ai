@@ -1,4 +1,3 @@
-
 import React, { useCallback, useState } from 'react';
 
 interface ImageUploaderProps {
@@ -28,7 +27,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload, label }) =
     <div>
       <label className="block text-sm font-medium text-brand-text-dark">{label}</label>
       <div className="mt-1 flex items-center">
-        <label htmlFor={`image-upload-${label}`} className="cursor-pointer bg-brand-secondary hover:bg-gray-600 text-brand-text-light text-xs font-semibold py-1.5 px-2.5 rounded-md transition-colors">
+        <label htmlFor={`image-upload-${label}`} className="cursor-pointer bg-brand-secondary hover:bg-brand-border text-brand-text-light text-xs font-semibold py-1.5 px-2.5 rounded-md transition-colors">
           <span>{fileName ? 'Change Image' : 'Upload Image'}</span>
           <input id={`image-upload-${label}`} type="file" className="sr-only" onChange={handleFileChange} accept="image/*" />
         </label>
