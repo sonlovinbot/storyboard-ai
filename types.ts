@@ -63,6 +63,7 @@ export interface StoryboardPanel {
   prompt?: string;
   isGenerating?: boolean;
   referenceImageIds?: string[];
+  veoPrompt?: string;
 }
 
 export interface SceneSetting {

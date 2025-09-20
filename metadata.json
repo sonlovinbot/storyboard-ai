@@ -1,5 +1,5 @@
 {
-  "name": "Storyboard AI",
+  "name": "Storyboard AI (Official) - v2",
   "description": "An advanced AI-powered application that guides users from a story idea through screenplay, character design, shotlist creation, and final storyboard export. It uses Gemini for text and image generation to ensure consistency.",
   "requestFramePermissions": []
 }

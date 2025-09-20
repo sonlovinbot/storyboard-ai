@@ -100,11 +100,13 @@ const generateHtmlContent = (project: Project): string => {
         .storyboard-details { padding: 1.5rem; }
         .storyboard-details h4 { font-size: 1.2rem; color: rgb(var(--color-primary)); margin-bottom: 0.5rem; }
         .shot-main-description { margin-bottom: 1rem; color: rgb(var(--color-text-dark)); }
-        .toggle-details-btn {
+        .action-button {
             background: none; border: 1px solid rgb(var(--color-border)); color: rgb(var(--color-text-dark)); font-weight: 500; cursor: pointer;
-            padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.8rem; margin-bottom: 1rem; transition: all 0.2s;
+            padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.8rem; transition: all 0.2s;
         }
-        .toggle-details-btn:hover { background-color: rgb(var(--color-secondary)); color: rgb(var(--color-text-light)); border-color: rgb(var(--color-primary)); }
+        .action-button:hover { background-color: rgb(var(--color-secondary)); color: rgb(var(--color-text-light)); border-color: rgb(var(--color-primary)); }
+        .button-group { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+
         .shot-extra-details { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-in-out, opacity 0.5s ease-in-out; opacity: 0; }
         .shot-extra-details.expanded { max-height: 1000px; opacity: 1; }
         .shot-details-grid {
@@ -148,12 +150,27 @@ const generateHtmlContent = (project: Project): string => {
         /* Footer & Utils */
         .app-footer { text-align: center; margin-top: 4rem; padding: 2rem; border-top: 1px solid rgb(var(--color-border)); color: rgb(var(--color-text-dark)); font-size: 0.9rem; }
         #back-to-top { position: fixed; bottom: 1rem; right: 1rem; z-index: 50; }
-        #lightbox { position: fixed; inset: 0; z-index: 200; background-color: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; padding: 2rem; cursor: pointer; }
+        #lightbox, #veo-modal-overlay { position: fixed; inset: 0; z-index: 200; background-color: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; padding: 2rem; cursor: pointer; }
         #lightbox img { max-width: 95%; max-height: 95%; object-fit: contain; border-radius: 8px; }
+        #veo-modal {
+            background: rgb(var(--color-surface) / 0.8); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgb(var(--color-border)); border-radius: 12px; padding: 2rem;
+            max-width: 600px; width: 100%; cursor: auto; box-shadow: 0 8px 32px 0 var(--shadow);
+        }
+        #veo-modal h4 { font-size: 1.5rem; margin-bottom: 1rem; color: rgb(var(--color-primary)); }
+        #veo-modal textarea {
+            width: 100%; height: 400px; background-color: rgb(var(--color-bg)); color: rgb(var(--color-text-light));
+            border: 1px solid rgb(var(--color-border)); border-radius: 8px; padding: 1rem; font-family: monospace; font-size: 0.85rem;
+        }
+        #veo-modal .modal-actions { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1rem; }
+        #veo-modal .modal-actions button {
+            background-color: rgb(var(--color-primary)); color: #fff; border: none; padding: 0.5rem 1rem;
+            border-radius: 6px; cursor: pointer;
+        }
         
         @media print {
             body { padding-top: 0; font-size: 11pt; color: #000; background: #fff; }
-            .app-header, .toc, .app-footer, #back-to-top, .no-print, .toggle-text-btn, .toggle-details-btn { display: none; }
+            .app-header, .toc, .app-footer, #back-to-top, .no-print, .toggle-text-btn, .action-button { display: none; }
             .card { box-shadow: none; border: 1px solid #ccc; backdrop-filter: none; break-inside: avoid; }
             .character-grid, .storyboard-grid { grid-template-columns: 1fr; }
             .collapsible-text, .shot-extra-details { max-height: none !important; opacity: 1 !important; }
@@ -230,6 +247,15 @@ const generateHtmlContent = (project: Project): string => {
     </footer>
 
     <div id="lightbox" class="hidden no-print"></div>
+    <div id="veo-modal-overlay" class="hidden no-print">
+        <div id="veo-modal">
+            <h4>VEO 3 Prompt</h4>
+            <textarea readonly></textarea>
+            <div class="modal-actions">
+                <button id="veo-copy-btn">Copy to Clipboard</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -329,7 +355,11 @@ const generateHtmlContent = (project: Project): string => {
                             <h4>Scene \${panel.shot.sceneNumber}, Shot \${panel.shot.shotNumber}</h4>
                             <p class="shot-main-description">\${escapeHtml(panel.shot.description)}</p>
                             
-                            <button class="toggle-details-btn no-print">Expand</button>
+                            <div class="button-group no-print">
+                                <button class="action-button toggle-details-btn">Expand</button>
+                                \${panel.veoPrompt ? '<button class="action-button veo-prompt-btn">VEO 3 Prompt</button>' : ''}
+                            </div>
+                            <div class="veo-prompt hidden">\${escapeHtml(panel.veoPrompt || '')}</div>
 
                             <div class="shot-extra-details">
                                 <div class="shot-details-grid">
@@ -376,7 +406,7 @@ const generateHtmlContent = (project: Project): string => {
             // --- EXPAND/COLLAPSE DETAILS (Storyboard) ---
             document.querySelectorAll('.toggle-details-btn').forEach(button => {
                 button.addEventListener('click', () => {
-                    const detailsContainer = button.nextElementSibling;
+                    const detailsContainer = button.parentElement.nextElementSibling.nextElementSibling;
                     detailsContainer.classList.toggle('expanded');
                     button.textContent = detailsContainer.classList.contains('expanded') ? 'Collapse' : 'Expand';
                 });
@@ -387,15 +417,44 @@ const generateHtmlContent = (project: Project): string => {
             const openLightbox = (src) => {
                 lightbox.innerHTML = \`<img src="\${src}" alt="Enlarged image">\`;
                 lightbox.classList.remove('hidden');
-                document.addEventListener('keydown', closeLightboxOnEsc);
             };
-            const closeLightbox = () => {
-                lightbox.classList.add('hidden');
-                lightbox.innerHTML = '';
-                document.removeEventListener('keydown', closeLightboxOnEsc);
-            };
-            const closeLightboxOnEsc = (e) => { if (e.key === 'Escape') closeLightbox(); };
+            const closeLightbox = () => lightbox.classList.add('hidden');
             lightbox.addEventListener('click', closeLightbox);
+            
+            // --- VEO MODAL ---
+            const veoModalOverlay = document.getElementById('veo-modal-overlay');
+            const veoModal = document.getElementById('veo-modal');
+            const veoTextarea = veoModal.querySelector('textarea');
+            const veoCopyBtn = document.getElementById('veo-copy-btn');
+            
+            const openVeoModal = (promptText) => {
+                veoTextarea.value = promptText;
+                veoModalOverlay.classList.remove('hidden');
+            };
+            const closeVeoModal = () => veoModalOverlay.classList.add('hidden');
+            
+            document.querySelectorAll('.veo-prompt-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const prompt = btn.parentElement.nextElementSibling.textContent;
+                    openVeoModal(prompt);
+                });
+            });
+            
+            veoModalOverlay.addEventListener('click', closeVeoModal);
+            veoModal.addEventListener('click', e => e.stopPropagation()); // Prevent closing when clicking inside
+            veoCopyBtn.addEventListener('click', e => {
+                veoTextarea.select();
+                document.execCommand('copy');
+                e.target.textContent = 'Copied!';
+                setTimeout(() => { e.target.textContent = 'Copy to Clipboard'; }, 2000);
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === "Escape") {
+                    closeLightbox();
+                    closeVeoModal();
+                }
+            });
             
             // --- DOWNLOAD HTML ---
             document.getElementById('download-html').addEventListener('click', () => {

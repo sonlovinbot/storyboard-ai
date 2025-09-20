@@ -32,9 +32,10 @@ interface StoryboardCardProps {
     onGenerate: () => void;
     onEdit: () => void;
     onDelete: () => void;
+    onVeoPrompt: () => void;
 }
 
-const StoryboardCard: React.FC<StoryboardCardProps> = ({ panel, sceneTitle, onGenerate, onEdit, onDelete }) => {
+const StoryboardCard: React.FC<StoryboardCardProps> = ({ panel, sceneTitle, onGenerate, onEdit, onDelete, onVeoPrompt }) => {
     const [isCopied, setIsCopied] = useState(false);
 
     const handleCopyDetails = () => {
@@ -115,9 +116,12 @@ const StoryboardCard: React.FC<StoryboardCardProps> = ({ panel, sceneTitle, onGe
                        {panel.imageUrl ? "Regenerate" : "Generate"}
                    </Button>
                    <div className="flex space-x-2">
+                        <Button variant="secondary" onClick={onVeoPrompt} size="sm" className="flex-1">VEO Prompt</Button>
                         <Button variant="secondary" onClick={onEdit} size="sm" className="flex-1">Edit</Button>
+                   </div>
+                   <div className="flex space-x-2">
                         <Button variant="secondary" onClick={handleCopyDetails} size="sm" className="flex-1">
-                            {isCopied ? 'Copied!' : 'Copy'}
+                            {isCopied ? 'Copied!' : 'Copy Info'}
                         </Button>
                         <Button variant="danger" onClick={onDelete} size="sm" className="flex-1">Delete</Button>
                    </div>
@@ -132,10 +136,16 @@ const Step6_Storyboard: React.FC<Props> = ({ project, setProject, goToNextStep }
   const [isGeneratingAll, setIsGeneratingAll] = useState(false);
   const stopRunAllRef = useRef(false);
 
+  // Edit Modal State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingPanelIndex, setEditingPanelIndex] = useState<number | null>(null);
   const [editedPanelData, setEditedPanelData] = useState<StoryboardPanel | null>(null);
   
+  // VEO Modal State
+  const [isVeoModalOpen, setIsVeoModalOpen] = useState(false);
+  const [veoPanelIndex, setVeoPanelIndex] = useState<number | null>(null);
+  const [veoPromptText, setVeoPromptText] = useState('');
+
   type ModalReferenceImage = { id: string; mimeType: string; data: string; title: string };
   const [modalReferenceImages, setModalReferenceImages] = useState<ModalReferenceImage[]>([]);
 
@@ -385,6 +395,86 @@ const Step6_Storyboard: React.FC<Props> = ({ project, setProject, goToNextStep }
     dragOverItem.current = null;
   };
   
+  // --- VEO Prompt Logic ---
+  const generateVeoPrompt = useCallback((panel: StoryboardPanel, panelIndex: number, totalPanels: number): string => {
+      const mainCharacter = project.characters.find(c =>
+          panel.shot.description.toLowerCase().includes(c.name.toLowerCase())
+      );
+      const sceneSetting = project.sceneSettings.find(s => s.imageUrl); // Use first available for now
+      const duration = parseInt(panel.shot.ert, 10);
+
+      const promptData = {
+          prompt: `${panelIndex + 1}/${totalPanels}`,
+          setting: {
+              id: sceneSetting?.id || "[settingID_...]",
+              character: {
+                  name: mainCharacter?.name || "[Character Name]",
+                  id: mainCharacter?.id || "[charID_...]",
+                  action: panel.shot.description,
+                  visualElements: panel.shot.notes || "Describe any visual elements that appear (graphics, other scenes)"
+              }
+          },
+          camera: `${panel.shot.shotSize}, ${panel.shot.perspective}, ${panel.shot.movement}`,
+          voice: {
+              character: panel.shot.dialogue?.[0]?.character || (mainCharacter?.name || "[Character Name]"),
+              accent: "(Describe the tone and emotion, e.g., hopeful, tense)",
+              dialogue: panel.shot.dialogue?.map(d => `${d.character}: "${d.line}"`).join('\n') || "No dialogue"
+          },
+          tone: "Summarize the emotional feel of the frame in 1-2 words (e.g., Suspenseful, Joyful)",
+          backgroundAudio: {
+              musicStyle: panel.shot.music || "Describe the style of music",
+              sfx: panel.shot.sfx || "Describe specific sound effects (SFX)"
+          },
+          negativePrompt: "blurry, low quality, cartoonish, watermark, inconsistent character appearance, character's attire suddenly changes, text overlays, no watermark, no warped fac, no floating limbs, no text artifacts",
+          durationSeconds: isNaN(duration) ? 5 : duration,
+          quality: "4K",
+          voiceLanguage: "Speak Only Vietnamese",
+          displayText: "Don't show captions, text overlays"
+      };
+      
+      return JSON.stringify(promptData, null, 2);
+  }, [project.characters, project.sceneSettings]);
+
+  const handleOpenVeoModal = (index: number) => {
+    const panel = project.storyboard[index];
+    let prompt = panel.veoPrompt;
+    if (!prompt) {
+        prompt = generateVeoPrompt(panel, index, project.storyboard.length);
+        // Save the newly generated prompt to the state
+        setProject(p => {
+            const newStoryboard = [...p.storyboard];
+            newStoryboard[index] = { ...newStoryboard[index], veoPrompt: prompt };
+            return { ...p, storyboard: newStoryboard };
+        });
+    }
+    setVeoPanelIndex(index);
+    setVeoPromptText(prompt);
+    setIsVeoModalOpen(true);
+  };
+  
+  const handleCloseVeoModal = () => {
+    setIsVeoModalOpen(false);
+    setVeoPanelIndex(null);
+    setVeoPromptText('');
+  };
+
+  const handleSaveVeoPrompt = () => {
+    if (veoPanelIndex !== null) {
+        setProject(p => {
+            const newStoryboard = [...p.storyboard];
+            newStoryboard[veoPanelIndex] = { ...newStoryboard[veoPanelIndex], veoPrompt: veoPromptText };
+            return { ...p, storyboard: newStoryboard };
+        });
+    }
+    handleCloseVeoModal();
+  };
+  
+  const handleCopyVeoPrompt = () => {
+      navigator.clipboard.writeText(veoPromptText).then(() => {
+          alert('VEO prompt copied to clipboard!');
+      });
+  };
+
   const canProceed = project.storyboard.filter(p => p.imageUrl).length >= 6;
   const editingPanel = editingPanelIndex !== null ? project.storyboard[editingPanelIndex] : null;
 
@@ -409,6 +499,7 @@ const Step6_Storyboard: React.FC<Props> = ({ project, setProject, goToNextStep }
                     onGenerate={() => handleGenerateImage(index)} 
                     onEdit={() => handleOpenEditModal(index)}
                     onDelete={() => handleDeletePanel(index)}
+                    onVeoPrompt={() => handleOpenVeoModal(index)}
                 />
             );
         })}
@@ -512,6 +603,27 @@ const Step6_Storyboard: React.FC<Props> = ({ project, setProject, goToNextStep }
                 </div>
             </div>
         )}
+      </Modal>
+
+      <Modal
+        isOpen={isVeoModalOpen}
+        onClose={handleCloseVeoModal}
+        title={`VEO 3 Prompt for Shot ${veoPanelIndex !== null ? project.storyboard[veoPanelIndex].shot.sceneNumber : ''}.${veoPanelIndex !== null ? project.storyboard[veoPanelIndex].shot.shotNumber : ''}`}
+        footer={
+          <div className="flex gap-2">
+            <Button variant="secondary" onClick={handleCloseVeoModal}>Close</Button>
+            <Button variant="secondary" onClick={handleCopyVeoPrompt}>Copy</Button>
+            <Button onClick={handleSaveVeoPrompt}>Save Prompt</Button>
+          </div>
+        }
+      >
+        <Textarea
+          label="VEO 3 Generative Video Prompt"
+          value={veoPromptText}
+          onChange={(e) => setVeoPromptText(e.target.value)}
+          rows={20}
+          className="font-mono text-xs leading-5"
+        />
       </Modal>
 
     </div>
